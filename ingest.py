@@ -108,35 +108,31 @@ def chunk_markdown(file, text):
 
 # ---------- Main ----------
 
+def is_noise(path):
+    """Skip doc pages that would pollute search: internal test pages snd release notes."""
+    return path.suffix == ".md" and (path.name.startswith("_") or path.name == "release-notes.md")
+
 def main():
     download_repo()
     chunks = []
     for path in sorted(REPO_DIR.rglob("*")):
-        if path.suffix not in (".py", ".md") or path.stat().st_size > MAX_FILE_BYTES:
+        if path.suffix not in (".py",".md") or path.stat().st_size > MAX_FILE_BYTES or is_noise(path):
             continue
         rel = path.relative_to(REPO_DIR).as_posix()
         text = path.read_text(encoding="utf-8", errors="ignore")
-        chunks += chunk_python(rel, text) if path.suffix == ".py" else chunk_markdown(rel, text)
-
+        chunks += chunk_python(rel,text) if path.suffix == ".py" else chunk_markdown(rel, text)
+        
     for n, c in enumerate(chunks):
         c["id"] = f"c{n:05d}"
     with open(CHUNKS_PATH, "w", encoding="utf-8") as f:
         for c in chunks:
             f.write(json.dumps(c, ensure_ascii=False) + "\n")
-
+            
     kinds = Counter(c["kind"] for c in chunks)
-    avg = sum(c["end_line"] - c["start_line"] + 1 for c in chunks) / len(chunks)
+    avg = sum(c["end_line"] - c["start_line"] + 1 for c in chunks)/len(chunks)
     print(f"\nWrote {len(chunks)} chunks to {CHUNKS_PATH}")
     print("By kind:", dict(kinds))
-    print(f"Average chunk length: {avg:.0f} lines")
-
-    print("\n--- One sample of each kind ---")
-    shown = set()
-    for c in chunks:
-        if c["kind"] not in shown:
-            shown.add(c["kind"])
-            print(f"\n[{c['kind']}] {c['file']}:{c['start_line']}-{c['end_line']}  ({c['name']})")
-            print(c["text"][:300])
-
+    print(f"Average chunk length : {avg:.0f} lines")
+    
 if __name__ == "__main__":
     main()
