@@ -7,7 +7,7 @@ The first target codebase is [FastAPI](https://github.com/fastapi/fastapi) (sour
 ## Status
 
 - [x] Ingest and chunk a repository (functions, classes, doc sections)
-- [ ] Keyword search and answers with citations
+- [x] Keyword search and answers with citations
 - [ ] Embeddings and hybrid search
 - [ ] Evaluation set and scoring script
 - [ ] Experiments (chunk size, search method, model size)
@@ -20,14 +20,28 @@ The first target codebase is [FastAPI](https://github.com/fastapi/fastapi) (sour
 3. **Answer:** the local model answers only from those chunks and cites `file:line`.
 4. **Evaluate:** score retrieval and answers against a hand-written question set.
 
+## Index statistics
+
+| Kind | Chunks |
+|---|---|
+| doc | 1201 |
+| function | 216 |
+| class | 116 |
+| method | 241 |
+| **Total** | **1774** |
+
 ## Run the ingestion
+
+## Usage
 
 ```bash
 pip install -r requirements.txt
-python ingest.py
+ollama pull qwen3:1.7b
+python ingest.py     # downloads FastAPI and writes data/chunks.jsonl
+python qa.py         # ask questions about the code
 ```
 
-This downloads FastAPI into `data/` and writes `data/chunks.jsonl`.
+`qa.py` prints the retrieved snippets first, then a cited answer, then a check that every citation matches a snippet the model was actually shown.
 
 ## License
 
